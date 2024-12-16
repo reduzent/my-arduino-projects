@@ -1,35 +1,40 @@
-#include <Servo.h>
-
-// we define a servo for our barrier
-Servo schranke;
 
 // servo end position of barrier up
-float schranke_DOWN = 164.0;
+const float schranke_DOWN = 185.0;
 // servo end position of barrier down
-float schranke_UP = 62.0;
+const float schranke_UP = 66.0;
 // servo current position
 float schranke_POS = schranke_UP;
 // servo increment
-float schranke_DELTA = 0.25;
+const float schranke_DELTA = 1;
 // servo target position
 float schranke_TARGET;
 
-int LEDgreen = 2;
-int LEDorange = 3;
+int servo = 1;
+
+bool pulse_on = false;
+
+int LEDgreen = 3;
+int LEDorange = 2;
 int LEDred = 4;
 
-int SWITCH_A = 6;
-int SWITCH_B = 7;
+int SWITCH_A = 5;
+int SWITCH_B = 0;
 
 bool a = 0;
 bool b = 0;
 
-unsigned long before = millis();
-unsigned long period = 5;
+void servo_pulse(int pin, int pos){
+  int pulse = map(pos,0, 180, 700, 2300);
+  digitalWrite(pin, HIGH);
+  delayMicroseconds(pulse);
+  digitalWrite(pin, LOW);
+  delay(20);
+}
 
 void setup() {
-  // servo on pin 9
-  schranke.attach(9);
+  // set servo to OUTPUT
+  pinMode(servo, OUTPUT);
 
   // set LED pins to output
   pinMode(LEDgreen, OUTPUT);
@@ -50,26 +55,28 @@ void loop() {
   digitalWrite(LEDred, !b);
   digitalWrite(LEDorange, a && b);
   
-  // execute periodically every period ms
-  if ((millis() - before) >= period)
-  {
-    before = millis();
-    // on green
-    if (!a) {
-      schranke_TARGET = schranke_UP;
-    }
-    // on red
-    if (!b) {
-      schranke_TARGET = schranke_DOWN;
-    }
+
+  // on green
+  if (!a) {
+    schranke_TARGET = schranke_UP;
+  }
+  // on red
+  if (!b) {
+    schranke_TARGET = schranke_DOWN;
+  }
     
-    if (schranke_POS > schranke_TARGET) {
-      schranke_POS -= schranke_DELTA;
-    }
-    if (schranke_POS < schranke_TARGET) {
-      schranke_POS += schranke_DELTA;
-    }
-    schranke_POS = constrain(schranke_POS, schranke_UP, schranke_DOWN);
-    schranke.write(schranke_POS);
-  }   
+  if (schranke_POS > schranke_TARGET) {
+    schranke_POS -= schranke_DELTA;
+    pulse_on = true;
+  } else if (schranke_POS < schranke_TARGET) {
+    schranke_POS += schranke_DELTA;
+    pulse_on = true;
+  } else if (schranke_POS == schranke_TARGET) {
+    pulse_on = false;
+  }
+  if (pulse_on) {
+    servo_pulse(servo, schranke_POS);    
+  }
+
+   
 }
