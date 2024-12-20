@@ -1,42 +1,55 @@
-// Using the IRremote library: https://github.com/Arduino-IRremote/Arduino-IRremote
 #include <IRremote.h>
 
 IRsend irsend;
 
-void setup() {
+byte packindex = 0;
+byte incoming = 0;
+byte packet[] = {0, 0, 0};
+
+unsigned int IRcode = 0;
+//unsigned long IRdevice = 0x00F7C03F;
+unsigned long IRdevice = 0x00F70000;
+int repeat = 0;
+
+void setup()
+{
   Serial.begin(9600);
-  pinMode(5, INPUT_PULLUP); // SW1 connected to pin 2
-  pinMode(6, INPUT_PULLUP); // SW2 connected to pin 3
-  pinMode(8, INPUT_PULLUP); // SW3 connected to pin 4
-
-
-  // The IR LED is connected to pin 3 (PWM ~) on the Arduino
 }
 
-void loop() {
+void loop()
+{  
+  if (Serial.available() != 0)
+  {
+    incoming = Serial.read();
+    if((incoming >> 7) == 1) // first byte in a packet
+    {
+      packet[0] = incoming;
+      packet[1] = 0; // reset data when init new packet
+      packet[2] = 0;
+      packindex = 1;
+    }
+    else 
+    {
+      packet[packindex] = incoming;
+      packindex += 1;
+    }
+  }
   
-  if (digitalRead(5) == LOW) { // When SW1 is pressed
-    irsend.sendNEC(0x00F7C03F, 32);  // Replace with your own unique code
-    Serial.println("Code sent!");
-    delay(30);
-  } 
+  if(packindex >= 3)
+  {
+    packindex = 0;
+    // | L               | M               | N               |
+    // | 1 A A A A A A A | 0 A B B B B B B | 0 B B T T T T T |
+    repeat = packet[2] & B00011111;
+    IRcode = packet[0] << 9 | packet[1] << 2 | packet[2] >> 5;
 
-  else if (digitalRead(6) == LOW) { // When SW2 is pressed
-    irsend.sendNEC(0x00F740BF, 32); // Replace with your own unique code
-    Serial.println("Code sent!");
-    delay(30);
-  } 
-
-  else if (digitalRead(7) == LOW) { // When SW3 is pressed
-    irsend.sendNEC(0x00000000, 32); // Replace with your own unique code
-    Serial.println("Code sent!");
-    delay(30);
-  } 
-  
-  else {
-    Serial.println("Nothing to send");
-    delay(30);
-  } 
-
-  delay(100);
+    //// Check values
+    //Serial.write(IRcode >> 8);
+    //Serial.write(IRcode & 255);
+    //Serial.write(repeat);
+    // irsend.sendNEC(IRdevice | IRcode, repeat);
+    // It seems we get only valid reads from Flipper, when repeat is set to 32
+    irsend.sendNEC(IRdevice | IRcode, 32);  
+    delay(100);    
+  }
 }
