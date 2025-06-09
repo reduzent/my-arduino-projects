@@ -5,7 +5,8 @@ int sensorPin = A2;
 int sensorThresh = 10;
 int period = 1;
 int tonePin = 2;
-int toneFreq = 1000;
+int toneFreq = 600;
+int toneFreq2 = 800;
 
 int sensorOnVal;
 int sensorOffVal;
@@ -16,7 +17,7 @@ void setup() {
   pinMode(sensorPin, INPUT);
   pinMode(indicatorPin, OUTPUT);
   pinMode(senderPin, OUTPUT);
-  Serial.begin(9600);
+  //Serial.begin(9600);
 }
 
 void loop() {
@@ -34,13 +35,15 @@ void loop() {
   // evaluate the result
   sensorDelta = abs(sensorOnVal - sensorOffVal);
   if (sensorDelta > sensorThresh) {
-    indicatorState = LOW;
+    digitalWrite(indicatorPin, LOW);
     noTone(tonePin);
   } else { 
-    indicatorState = HIGH;
+    digitalWrite(indicatorPin, HIGH);
     tone(tonePin, toneFreq);
+    delay(1000);
+    tone(tonePin, toneFreq2);
+    delay(1000);
   }
-  digitalWrite(indicatorPin, indicatorState);
   //Serial.print(sensorDelta);
   //Serial.print("\n");
 }
