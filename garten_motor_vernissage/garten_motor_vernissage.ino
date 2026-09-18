@@ -52,6 +52,7 @@ Bei Vollgas braucht eine volle Umdrehung 1.6 Sekunden. Wenn man also nur einen
 einzelnen Schlag erzeugen möchte, sollte der Motor genau so lange laufen.
 */
 
+
 static const uint8_t MOTOR[7] = {
   0,     /* 0: (placeholder) */
   11,    /* 1: Ton-Becher*/
@@ -120,23 +121,6 @@ void setup() {
 }
 
 void loop() {
-  // analogWrite(MOTOR[2], 100);
-  // delay(3000);
-  // for (int i = 255; i >= 100; i--) {
-  //   analogWrite(MOTOR[2], i);
-  //   delay(20);
-  // }
-  // analogWrite(MOTOR[2], 100);
-  // delay(1000);
-  // analogWrite(MOTOR[2], 0);
-  // delay(3000);
-
-  analogWrite(MOTOR[2], 100);
-  delay(3000);
-  analogWrite(MOTOR[2], 0);
-  analogWrite(MOTOR[4], 255);
-  delay(1000);
-  analogWrite(MOTOR[4], 0);
-
-
+  duty();
+  pause();
 }
