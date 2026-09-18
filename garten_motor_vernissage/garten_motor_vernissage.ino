@@ -52,7 +52,22 @@ Bei Vollgas braucht eine volle Umdrehung 1.6 Sekunden. Wenn man also nur einen
 einzelnen Schlag erzeugen möchte, sollte der Motor genau so lange laufen.
 */
 
+// Motorendefinition
+static const uint8_t BECHER  = 1;
+static const uint8_t RATSCHE = 2;
+static const uint8_t STEIN   = 3;
+static const uint8_t DISTEL  = 4;
+static const uint8_t FLASCHE = 5;
 
+// Dauerbereiche
+static const bool SKIP_INTRO = 1;
+static const long INTRO_DUR  = 180000; /* ms (3min)*/
+static const long PAUSE_MIN  = 10000;  /* ms */
+static const long PAUSE_MAX  = 30000;  /* ms */
+static const long DUTY_MIN   = 5000;   /* ms */
+static const long DUTY_MAX   = 20000;  /* ms */
+
+// Array löst Motor nach Pin auf
 static const uint8_t MOTOR[7] = {
   0,     /* 0: (placeholder) */
   11,    /* 1: Ton-Becher*/
@@ -63,22 +78,60 @@ static const uint8_t MOTOR[7] = {
   3      /* 6: not used */
 };
 
+static const bool MIN = 0;
+static const bool MAX = 1;
+
+// Array mit MIN und MAX Werten pro Motor
 static const uint8_t PWM_LIMITS[7][2] = {
   {  0,   0},   /* 0 – placeholder, unused */
   { 60, 100},   /* 1 – Ton-Becher */
   {100, 255},   /* 2 – Ratsche */
-  {255, 255},   /* 3 – Steinschlag */
+  {100, 255},   /* 3 – Steinschlag */
   {255, 255},   /* 4 – Distelkratz */
-  {100, 200},   /* 5 – Flasche */
+  {255, 255},   /* 5 – Flasche */
   {  0,   0}    /* 6 – not used */
 };
 
-static const bool SKIP_INTRO = 1;
-static const int  INTRO_DUR  = 10000; /* ms */
-static const int  PAUSE_MIN  = 10000; /* ms */
-static const int  PAUSE_MAX  = 30000; /* ms */
-static const int  DUTY_MIN   = 5000;  /* ms */
-static const int  DUTY_MAX   = 20000;  /* ms */
+void play(uint8_t obj, uint8_t vel, long dur) {
+  analogWrite(MOTOR[obj], vel);
+  delay(dur);
+  analogWrite(MOTOR[obj], 0);
+}
+
+void pause(long dur) {
+  delay(dur);
+}
+
+void wait() {
+  long dur = random(PAUSE_MIN, PAUSE_MAX);
+  delay(dur);
+}
+
+void rampUp(uint8_t obj, unsigned long dur) {
+  byte min = PWM_LIMITS[obj][MIN];
+  byte max = PWM_LIMITS[obj][MAX];
+  uint16_t steps = max - min;
+  unsigned long t0 = millis();
+  analogWrite(MOTOR[obj], min);
+  for (uint16_t i = 0; i <= steps; i++) {
+    unsigned long target = (dur * i) / steps;
+    while (millis() - t0 < target) { /* wait */ }
+    analogWrite(MOTOR[obj], min + i);
+  }
+}
+
+void rampDown(uint8_t obj, unsigned long dur) {
+  byte min = PWM_LIMITS[obj][MIN];
+  byte max = PWM_LIMITS[obj][MAX];
+  uint16_t steps = max - min;
+  unsigned long t0 = millis();
+  analogWrite(MOTOR[obj], max);
+  for (uint16_t i = 0; i <= steps; i++) {
+    unsigned long target = (dur * i) / steps;
+    while (millis() - t0 < target) { /* spin */ }
+    analogWrite(MOTOR[obj], max - i);
+  }
+}
 
 void intro() {
   delay(INTRO_DUR);
@@ -94,23 +147,14 @@ void duty() {
   uint8_t i = random(1, 6);
   uint8_t j = random(1, 5);            
   if (j >= i) j++;
-  uint8_t pi = random(PWM_LIMITS[i][0], PWM_LIMITS[i][1]);
-  uint8_t pj = random(PWM_LIMITS[j][0], PWM_LIMITS[j][1]);
-  int duri = random(DUTY_MIN, DUTY_MAX);
-  int durj = random(DUTY_MIN, DUTY_MAX);
-  // first object playing
-  analogWrite(MOTOR[i], pi);
-  delay(duri);
-  analogWrite(MOTOR[i], 0);
-  // second object playing
-  analogWrite(MOTOR[j], pj);
-  delay(durj);
-  analogWrite(MOTOR[j], 0);
-}
+  uint8_t both[2] = {i, j};
+  for (uint8_t i = 0; i <= 1; i++) {
+    uint8_t obj = both[i];
+    uint8_t vel = random(PWM_LIMITS[m][MIN], PWM_LIMITS[m][MAX]);
+    long    dur = random(DUTY_MIN, DUTY_MAX);
+    play(obj, vel, dur);
+  }
 
-void pause() {
-  int dur = random(PAUSE_MIN, PAUSE_MAX);
-  delay(dur);
 }
 
 void setup() {
@@ -122,5 +166,5 @@ void setup() {
 
 void loop() {
   duty();
-  pause();
+  wait();
 }
