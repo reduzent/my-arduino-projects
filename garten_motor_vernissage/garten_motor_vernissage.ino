@@ -269,6 +269,30 @@ void distelRatsche() {
 
 // "PLAYABLES" UNTIL HERE ///////////////////////////////////////////////////
 
+void playThemAll() {
+  void (*playables[])() = { 
+    pickTwo, 
+    pickThree, 
+    ratsche,
+    flasche,
+    distel,
+    distelPulse,
+    stein1x,
+    stein2x,
+    becher,
+    becher2,
+    distelRatsche
+  };
+  const uint8_t NUM_ACTIONS = sizeof(playables) / sizeof(playables[0]);
+
+  uint8_t segments = random(2, 5);   // 2, 3, or 4
+  for (uint8_t s = 0; s < segments; s++) {
+    uint8_t pick = random(0, NUM_ACTIONS);
+    playables[pick]();
+  }
+  wait();
+}
+
 void setup() {
   randomSeed(analogRead(A0));
   for (int i; i < 7; i++) {
@@ -278,10 +302,5 @@ void setup() {
 }
 
 void loop() {
-  ratsche();
-  wait();
-  pickThree();
-  wait();
-  pickTwo();
-  wait();
+  playThemAll();
 }
