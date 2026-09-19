@@ -59,7 +59,7 @@ static const uint8_t DISTEL  = 4;
 static const uint8_t FLASCHE = 5;
 
 // Dauerbereiche
-static const bool SKIP_INTRO = 1;
+static const bool SKIP_INTRO = 0;
 static const long INTRO_DUR  = 180000; /* ms (3min)*/
 //static const long PAUSE_MIN  = 30000;  /* ms */
 //static const long PAUSE_MAX  = 300000;  /* ms */
