@@ -64,7 +64,7 @@ static const bool SKIP_INTRO = 1;
 static const long INTRO_DUR  = 180000; /* ms (3min)*/
 //static const long PAUSE_MIN  = 30000;  /* ms */
 //static const long PAUSE_MAX  = 300000;  /* ms */
-static const long PAUSEN[] = {30000, 60000, 120000, 300000};
+static const long PAUSEN[] = {15000, 30000, 60000, 180000};
 static const long DUTY_MIN   = 4000;   /* ms */
 static const long DUTY_MAX   = 10000;  /* ms */
 
@@ -119,6 +119,7 @@ void rampUp(uint8_t obj, unsigned long dur) {
     while (millis() - t0 < target) { /* wait */ }
     analogWrite(MOTOR[obj], min + i);
   }
+  analogWrite(MOTOR[obj], 0);
 }
 
 void rampDown(uint8_t obj, unsigned long dur) {
@@ -132,6 +133,7 @@ void rampDown(uint8_t obj, unsigned long dur) {
     while (millis() - t0 < target) { /* spin */ }
     analogWrite(MOTOR[obj], max - i);
   }
+  analogWrite(MOTOR[obj], 0);
 }
 
 void ramp(uint8_t obj, unsigned long dur, bool up) {
@@ -145,16 +147,12 @@ void ramp(uint8_t obj, unsigned long dur, bool up) {
     analogWrite(MOTOR[obj], value);
     delay(stepDelay);
   }
+  analogWrite(MOTOR[obj], 0);
 }
 
 void intro() {
   delay(INTRO_DUR);
-  for (int i = 60; i <= 255; i++) {
-    analogWrite(MOTOR[4], i);
-    delay(40);
-  }
-  delay(2000);
-  analogWrite(MOTOR[4], 0);
+  rampUp(FLASCHE, 10000);
 }
 
 // "PLAYABLES" FROM HERE ////////////////////////////////////////////////////
@@ -207,7 +205,7 @@ void ratsche() {
 
 void flasche() {
   rampUp(FLASCHE, 500);
-  play(FLASCHE, 255, (4000 + (random(3) * 4000)));
+  play(FLASCHE, 255, (8000) + (random(2) * 8000)));
   rampDown(FLASCHE, 500);
 }
 
@@ -227,22 +225,22 @@ void distelPulse() {
 }
 
 void stein1x() {
-  play(STEIN, 255, 1600);
+  play(STEIN, 255, 1500);
 }
 
 void stein2x() {
-  play(STEIN, 255, 3200);
+  play(STEIN, 255, 3100);
 }
 
 void becher() {
   play(BECHER, 30, 6000);
-  int rounds = random(2, 6);
+  int rounds = random(2, 5);
   bool phase = 0;
   uint8_t vel = 0;
   for (int i = 0; i <= rounds; i++) {
     phase = !phase;
     vel = 30 + phase * 50; // either 30 or 80
-    play(BECHER, vel, (5000 + random(2)*5000));
+    play(BECHER, vel, (2000 + random(2)*2000));
   }
 }
 
