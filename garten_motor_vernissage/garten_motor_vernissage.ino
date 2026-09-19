@@ -64,8 +64,8 @@ static const bool SKIP_INTRO = 1;
 static const long INTRO_DUR  = 180000; /* ms (3min)*/
 static const long PAUSE_MIN  = 10000;  /* ms */
 static const long PAUSE_MAX  = 30000;  /* ms */
-static const long DUTY_MIN   = 5000;   /* ms */
-static const long DUTY_MAX   = 20000;  /* ms */
+static const long DUTY_MIN   = 4000;   /* ms */
+static const long DUTY_MAX   = 10000;  /* ms */
 
 // Array löst Motor nach Pin auf
 static const uint8_t MOTOR[7] = {
@@ -87,8 +87,8 @@ static const uint8_t PWM_LIMITS[7][2] = {
   { 60, 100},   /* 1 – Ton-Becher */
   {100, 255},   /* 2 – Ratsche */
   {100, 255},   /* 3 – Steinschlag */
-  {255, 255},   /* 4 – Distelkratz */
-  {255, 255},   /* 5 – Flasche */
+  {100, 255},   /* 4 – Distelkratz */
+  {100, 255},   /* 5 – Flasche */
   {  0,   0}    /* 6 – not used */
 };
 
@@ -133,6 +133,19 @@ void rampDown(uint8_t obj, unsigned long dur) {
   }
 }
 
+void ramp(uint8_t obj, unsigned long dur, bool up) {
+  byte min = PWM_LIMITS[obj][MIN];
+  byte max = PWM_LIMITS[obj][MAX];
+  uint16_t steps = max - min + 1;
+  unsigned long stepDelay = dur / steps;
+  if (stepDelay == 0) stepDelay = 1;
+  for (uint16_t k = 0; k < steps; k++) {
+    byte value = up ? (min + k) : (max - k);
+    analogWrite(MOTOR[obj], value);
+    delay(stepDelay);
+  }
+}
+
 void intro() {
   delay(INTRO_DUR);
   for (int i = 60; i <= 255; i++) {
@@ -143,28 +156,84 @@ void intro() {
   analogWrite(MOTOR[4], 0);
 }
 
-void duty() {
+void pickTwo() {
   uint8_t i = random(1, 6);
   uint8_t j = random(1, 5);            
   if (j >= i) j++;
   uint8_t both[2] = {i, j};
-  for (uint8_t i = 0; i <= 1; i++) {
+  for (uint8_t i = 0; i < 2; i++) {
     uint8_t obj = both[i];
-    uint8_t vel = random(PWM_LIMITS[m][MIN], PWM_LIMITS[m][MAX]);
-    long    dur = random(DUTY_MIN, DUTY_MAX);
+    uint8_t vel = random(PWM_LIMITS[obj][MIN], PWM_LIMITS[obj][MAX]);
+    long dur;
+    if (obj == STEIN) {
+      dur = 1600;
+    } else {
+      dur = random(DUTY_MIN, DUTY_MAX);
+    }
     play(obj, vel, dur);
   }
+}
 
+void pickThree() {
+  uint8_t i = random(1, 6);
+  uint8_t j = random(1, 5);
+  uint8_t k = random(1, 6);            
+  if (j >= i) j++;
+  uint8_t all[3] = {i, j, k};
+  for (uint8_t i = 0; i < 3; i++) {
+    uint8_t obj = all[i];
+    uint8_t vel = random(PWM_LIMITS[obj][MIN], PWM_LIMITS[obj][MAX]);
+    long dur;
+    if (obj == STEIN) {
+      dur = 1600;
+    } else {
+      dur = random(DUTY_MIN, DUTY_MAX);
+    }
+    play(obj, vel, dur);
+  }
+}
+
+void ratsche() {
+  play(RATSCHE, PWM_LIMITS[RATSCHE][MIN], 2000);
+  ramp(RATSCHE, (2000 + (random(2) * 2000)), random(2));
+  pause(500);
+  ramp(RATSCHE, (2000 + (random(2) * 2000)), random(2));
+  ramp(RATSCHE, (2000 + (random(2) * 2000)), random(2));
+  play(RATSCHE, PWM_LIMITS[RATSCHE][MIN], 2000);
+}
+
+void flasche() {
+  rampUp(FLASCHE, 500);
+  play(FLASCHE, 255, (4000 + (random(3) * 4000)));
+  rampDown(FLASCHE, 500);
+}
+
+void distel() {
+  rampUp(DISTEL, 500);
+  play(DISTEL, 255, (4000 + (random(3) * 4000)));
+  rampDown(DISTEL, 500);
+}
+
+void Stein1x() {
+  play(STEIN, 255, 1600);
+}
+
+void Stein2x() {
+  play(STEIN, 255, 3200);
 }
 
 void setup() {
   for (int i; i < 7; i++) {
     pinMode(MOTOR[i], OUTPUT);
-  }
+  } 
   if (! SKIP_INTRO) intro(); 
 }
 
 void loop() {
-  duty();
+  ratsche();
+  wait();
+  pickThree();
+  wait();
+  pickTwo();
   wait();
 }
