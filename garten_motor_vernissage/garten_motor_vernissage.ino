@@ -62,8 +62,9 @@ static const uint8_t FLASCHE = 5;
 // Dauerbereiche
 static const bool SKIP_INTRO = 1;
 static const long INTRO_DUR  = 180000; /* ms (3min)*/
-static const long PAUSE_MIN  = 10000;  /* ms */
-static const long PAUSE_MAX  = 30000;  /* ms */
+//static const long PAUSE_MIN  = 30000;  /* ms */
+//static const long PAUSE_MAX  = 300000;  /* ms */
+static const long PAUSEN[] = {30000, 60000, 120000, 300000};
 static const long DUTY_MIN   = 4000;   /* ms */
 static const long DUTY_MAX   = 10000;  /* ms */
 
@@ -87,8 +88,8 @@ static const uint8_t PWM_LIMITS[7][2] = {
   { 60, 100},   /* 1 – Ton-Becher */
   {100, 255},   /* 2 – Ratsche */
   {100, 255},   /* 3 – Steinschlag */
-  {100, 255},   /* 4 – Distelkratz */
-  {100, 255},   /* 5 – Flasche */
+  {255, 255},   /* 4 – Distelkratz */
+  {255, 255},   /* 5 – Flasche */
   {  0,   0}    /* 6 – not used */
 };
 
@@ -103,12 +104,12 @@ void pause(long dur) {
 }
 
 void wait() {
-  long dur = random(PAUSE_MIN, PAUSE_MAX);
+  long dur = PAUSEN[random(4)];
   delay(dur);
 }
 
 void rampUp(uint8_t obj, unsigned long dur) {
-  byte min = PWM_LIMITS[obj][MIN];
+  byte min = 30;
   byte max = PWM_LIMITS[obj][MAX];
   uint16_t steps = max - min;
   unsigned long t0 = millis();
@@ -121,7 +122,7 @@ void rampUp(uint8_t obj, unsigned long dur) {
 }
 
 void rampDown(uint8_t obj, unsigned long dur) {
-  byte min = PWM_LIMITS[obj][MIN];
+  byte min = 30;
   byte max = PWM_LIMITS[obj][MAX];
   uint16_t steps = max - min;
   unsigned long t0 = millis();
@@ -134,7 +135,7 @@ void rampDown(uint8_t obj, unsigned long dur) {
 }
 
 void ramp(uint8_t obj, unsigned long dur, bool up) {
-  byte min = PWM_LIMITS[obj][MIN];
+  byte min = 30;
   byte max = PWM_LIMITS[obj][MAX];
   uint16_t steps = max - min + 1;
   unsigned long stepDelay = dur / steps;
@@ -155,6 +156,8 @@ void intro() {
   delay(2000);
   analogWrite(MOTOR[4], 0);
 }
+
+// "PLAYABLES" FROM HERE ////////////////////////////////////////////////////
 
 void pickTwo() {
   uint8_t i = random(1, 6);
@@ -210,19 +213,64 @@ void flasche() {
 
 void distel() {
   rampUp(DISTEL, 500);
-  play(DISTEL, 255, (4000 + (random(3) * 4000)));
+  play(DISTEL, 255, (4000 + (random(2) * 4000)));
   rampDown(DISTEL, 500);
 }
 
-void Stein1x() {
+void distelPulse() {
+  int rounds = random(2, 5);
+  long dur = random(2) * 500 + 500;
+  for (int i = 0; i <= rounds; i++) {
+    play(DISTEL, 255, dur);
+    pause(dur);
+  }
+}
+
+void stein1x() {
   play(STEIN, 255, 1600);
 }
 
-void Stein2x() {
+void stein2x() {
   play(STEIN, 255, 3200);
 }
 
+void becher() {
+  play(BECHER, 30, 6000);
+  int rounds = random(2, 6);
+  bool phase = 0;
+  uint8_t vel = 0;
+  for (int i = 0; i <= rounds; i++) {
+    phase = !phase;
+    vel = 30 + phase * 50; // either 30 or 80
+    play(BECHER, vel, (5000 + random(2)*5000));
+  }
+}
+
+void becher2() {
+  // kürzere Sequenzen mit zusätzlichen Pausen
+  int limit = random(5, 20);
+  bool phase = 0;
+  uint8_t vel = 0;
+  for (int i = 0; i <= limit; i++) {
+    phase = !phase;
+    vel = phase * 50; // either 0 or 50
+    play(BECHER, vel, (200 + random(4)*200));
+  }
+}
+
+void distelRatsche() {
+  play(DISTEL, 255, 1000);
+  play(RATSCHE, 100, 3000);
+  play(DISTEL, 255, 2000);
+  play(RATSCHE, 255, 500);
+  play(DISTEL, 255, 4000);
+  rampDown(RATSCHE, 2000);
+}
+
+// "PLAYABLES" UNTIL HERE ///////////////////////////////////////////////////
+
 void setup() {
+  randomSeed(analogRead(A0));
   for (int i; i < 7; i++) {
     pinMode(MOTOR[i], OUTPUT);
   } 
