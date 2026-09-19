@@ -24,12 +24,11 @@ Erst nachdem diese Phase überwunden wird, läuft das normale Programm.
 So stellen wir sicher, dass das normale Programm nur läuft, wenn 
 genug Sonnenlicht da ist. 
 
-In der regulären Phase sollen dann jeweils zwei Objekte nacheinander
-erklingen, gefolgt von einer Pause. Dann wieder zwei Objekte nacheinander, 
-wobei die Objekte jeweils zufällig ausgewählt werden. So entsteht eine 
-Vielzahl verschiedener Übergänge. Sowohl die Dauer der Spielzeit eines
-Objektes, als auch die Pause zwischen den Gruppen sollen unterschiedlich
-lang ausfallen. 
+In der regulären Phase spielen dann 2 bis 4 Segmente, die teils
+fix vorgegeben, teils stochastisch erzeugt werden. Es stehen bis
+jetzt 11 solcher Segmente zur Verfügung. Die Cluster bestehend
+aus 2 bis 4 Segmenten werden unterbrochen durch Pausen, welche
+in PAUSEN[] definiert sind. 
 
 
 BECHER
