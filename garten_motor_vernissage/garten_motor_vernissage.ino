@@ -204,7 +204,7 @@ void ratsche() {
 
 void flasche() {
   rampUp(FLASCHE, 500);
-  play(FLASCHE, 255, (8000) + (random(3) * 8000))); // 8, 16, or 24 s
+  play(FLASCHE, 255, (8000) + (random(3) * 8000)); // 8, 16, or 24 s
   rampDown(FLASCHE, 500);
 }
 
